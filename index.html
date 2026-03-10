@@ -501,19 +501,15 @@ function parseCSVText(csvText) {
           } else { field += csvText[i++]; }
         }
       } else {
-        while (i < len && csvText[i] !== ',' && csvText[i] !== '
-' && csvText[i] !== '
-') {
+        while (i < len && csvText[i] !== ',' && csvText[i] !== '\n' && csvText[i] !== '\r') {
           field += csvText[i++];
         }
       }
       row.push(field);
       if (i < len && csvText[i] === ',') { i++; } else { break; }
     }
-    if (i < len && csvText[i] === '
-') i++;
-    if (i < len && csvText[i] === '
-') i++;
+    if (i < len && csvText[i] === '\r') i++;
+    if (i < len && csvText[i] === '\n') i++;
     if (row.length > 0 && !(row.length === 1 && row[0] === '')) rows.push(row);
   }
   return rows;
