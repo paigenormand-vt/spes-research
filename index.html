@@ -126,8 +126,20 @@
     gap: 12px;
   }
 
-  .search-wrap { position: relative; flex: 1; min-width: 200px; }
-  .search-wrap svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--text-light); width: 16px; height: 16px; }
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    width: 16px;
+    height: 16px;
+  }
   .search-wrap input {
     width: 100%;
     padding: 9px 14px 9px 38px;
@@ -143,8 +155,21 @@
   .search-wrap input:focus { border-color: var(--forest-mid); }
   .search-wrap input::placeholder { color: var(--text-light); }
 
-  .filter-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .filter-label { font-size: 0.75rem; font-weight: 600; color: var(--text-light); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .filter-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-light);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
 
   .filter-btn {
     padding: 6px 13px;
@@ -220,6 +245,7 @@
 
   .card:hover { box-shadow: var(--card-hover); transform: translateY(-2px); border-color: var(--sage); }
 
+  /* card stripes - color by environment type */
   .card-stripe { height: 4px; background: linear-gradient(90deg, var(--forest), var(--sage)); }
   .card-stripe.field { background: linear-gradient(90deg, #4A6741, #8FA882); }
   .card-stripe.lab { background: linear-gradient(90deg, #2B4A6F, #5B82A6); }
@@ -509,7 +535,7 @@ function csvToLabs(csvText) {
 }
 
 
-let activeFilters = { env: null, position: null, standing: null, timeline: null };
+let activeFilters = { env: null, position: [], standing: null, timeline: null };
 let searchQuery = '';
 
 function matchesSearch(lab, q) {
@@ -521,7 +547,7 @@ function matchesSearch(lab, q) {
 function matchesFilters(lab) {
   const { env, position, standing, timeline } = activeFilters;
   if (env && !lab.environments.includes(env)) return false;
-  if (position && !lab.positions.includes(position)) return false;
+  if (position.length > 0 && !position.some(p => lab.positions.includes(p))) return false;
   if (standing && !lab.standing.includes(standing)) return false;
   if (timeline && !lab.timeline.includes(timeline)) return false;
   return true;
@@ -535,9 +561,12 @@ function getStripeClass(lab) {
   return 'lab';
 }
 
-const posLabel = p => ({ wage:'Paid / Wage', credit:'Research Credit', volunteer:'Volunteer' }[p] || p);
-const tlLabel  = t => ({ fall:'Fall', spring:'Spring', summer:'Summer', anytime:'Anytime' }[t] || t);
-const stLabel  = s => ({ freshman:'Freshman', sophomore:'Sophomore', junior:'Junior', senior:'Senior' }[s] || s);
+function positionLabel(p) {
+  const labels = { wage: 'Paid / Wage', credit: 'Research Credit', volunteer: 'Volunteer' };
+  return labels[p] || p;
+}
+const tlLabel = t => ({ fall:'Fall', spring:'Spring', summer:'Summer', anytime:'Anytime' }[t] || t);
+const stLabel = s => ({ freshman:'Freshman', sophomore:'Sophomore', junior:'Junior', senior:'Senior' }[s] || s);
 
 function renderCards() {
   const filtered = labs.filter(l => matchesFilters(l) && matchesSearch(l, searchQuery));
@@ -552,7 +581,7 @@ function renderCards() {
   grid.innerHTML = filtered.map((lab, i) => {
     const sc = getStripeClass(lab);
     const envBadges = lab.environments.map(e => `<span class="env-badge ${e}">${e[0].toUpperCase()+e.slice(1)}</span>`).join('');
-    const posPills = lab.positions.map(p => `<span class="meta-pill position ${p}">${posLabel(p)}</span>`).join('');
+    const posPills = lab.positions.map(p => `<span class="meta-pill position ${p}">${positionLabel(p)}</span>`).join('');
     const tlPills = lab.timeline.map(t => `<span class="meta-pill">${tlLabel(t)}</span>`).join('');
     const desc = lab.description.length > 160 ? lab.description.slice(0,155)+'…' : lab.description;
     const acts = lab.activities.length > 120 ? lab.activities.slice(0,115)+'…' : lab.activities;
@@ -600,7 +629,7 @@ function openModal(id) {
   const posMap = { wage:'green', credit:'blue', volunteer:'purple' };
 
   const envPills = lab.environments.map(e => `<span class="modal-pill ${envMap[e]}">${envLabel[e]}</span>`).join('');
-  const posPills = lab.positions.map(p => `<span class="modal-pill ${posMap[p]||''}">${posLabel(p)}</span>`).join('');
+  const posPills = lab.positions.map(p => `<span class="modal-pill ${posMap[p]||''}">${positionLabel(p)}</span>`).join('');
   const tlPills  = lab.timeline.map(t => `<span class="modal-pill gold">${tlLabel(t)}</span>`).join('');
   const stPills  = lab.standing.map(s => `<span class="modal-pill">${stLabel(s)}</span>`).join('');
   const labNote  = lab.lab_note ? `<div style="background:var(--cream);border-left:3px solid var(--gold-light);border-radius:0 8px 8px 0;padding:10px 14px;font-size:.82rem;color:var(--text-mid);line-height:1.55;margin-top:-6px">${lab.lab_note}</div>` : '';
@@ -642,8 +671,14 @@ document.addEventListener('keydown', e => { if (e.key==='Escape') closeModal(); 
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const ft = btn.dataset.filter, val = btn.dataset.value;
-    if (activeFilters[ft]===val) { activeFilters[ft]=null; btn.classList.remove('active'); }
-    else { document.querySelectorAll(`.filter-btn[data-filter="${ft}"]`).forEach(b=>b.classList.remove('active')); activeFilters[ft]=val; btn.classList.add('active'); }
+    if (ft === 'position') {
+      const idx = activeFilters.position.indexOf(val);
+      if (idx > -1) { activeFilters.position.splice(idx, 1); btn.classList.remove('active'); }
+      else { activeFilters.position.push(val); btn.classList.add('active'); }
+    } else {
+      if (activeFilters[ft]===val) { activeFilters[ft]=null; btn.classList.remove('active'); }
+      else { document.querySelectorAll(`.filter-btn[data-filter="${ft}"]`).forEach(b=>b.classList.remove('active')); activeFilters[ft]=val; btn.classList.add('active'); }
+    }
     renderCards();
   });
 });
@@ -655,7 +690,7 @@ document.getElementById('search-input').addEventListener('input', e => {
 });
 
 document.getElementById('clear-filters').addEventListener('click', () => {
-  activeFilters = { env:null, position:null, standing:null, timeline:null };
+  activeFilters = { env:null, position:[], standing:null, timeline:null };
   searchQuery = '';
   document.getElementById('search-input').value = '';
   document.querySelectorAll('.filter-btn.active').forEach(b=>b.classList.remove('active'));
@@ -674,7 +709,7 @@ document.getElementById('list-view-btn').addEventListener('click', () => {
   document.getElementById('grid-view-btn').classList.remove('active');
 });
 
-// ── Initialise: fetch CSV then render ─────────────────────────────────────────
+// load data and kick things off
 document.getElementById('cards-grid').innerHTML =
   '<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text-light)">Loading opportunities…</div>';
 document.getElementById('results-count').textContent = '';
@@ -683,6 +718,7 @@ fetch('data.csv')
   .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
   .then(text => {
     labs = csvToLabs(text);
+    // update the pill in the header with actual count
     document.getElementById('total-count').textContent = labs.length + ' research opportunit' + (labs.length === 1 ? 'y' : 'ies');
     renderCards();
   })
