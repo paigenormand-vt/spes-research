@@ -18,7 +18,7 @@ A self-contained, static web page that lets students browse faculty research lab
 |---|---|
 | `spes-undergrad-research.html` | The entire website (HTML, CSS, and JavaScript in one file) |
 | `data.csv` | The structured data powering all the cards — **edit this to update content** |
-| `updateddata.csv` | Raw QuestionPro survey export — archive only, not loaded by the site |
+| `updated-data.csv` | Raw QuestionPro survey export — archive only, not loaded by the site |
 | `transform_survey.py` | Python script that converts `updated-data.csv` → `data.csv` |
 
 ---
