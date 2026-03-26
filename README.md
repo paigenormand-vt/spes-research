@@ -79,4 +79,4 @@ Or use the **Live Server** extension in VS Code.
 
 ## Maintainer
 
-Paige Normand · Academic Student Support Advisor, SPES · [paigenormand@vt.edu](mailto:paigenormand@vt.edu)
+Paige Normand · Academic Advisor, SPES · [paigenormand@vt.edu](mailto:paigenormand@vt.edu)
